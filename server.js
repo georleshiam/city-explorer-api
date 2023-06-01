@@ -44,12 +44,22 @@ app.get('/', function (request, response) {
     response.send("hello")
 
 })
+let weathercache = {}
+
+
 app.get("/weather", async function (request, response) {
+    let cityData = weathercache[request.query.searchQuery]
     // console.log(request.query.lat)
-    // console.log(request.query.lon)
-    // console.log(request.query.searchQuery)
-    //send request to weatherbit api
-    let cityData = await axios.get(`http://api.weatherbit.io/v2.0/forecast/daily?key=77c4324de293441698c215757086494d&city=${request.query.searchQuery}`)
+    if (cityData === undefined)
+    {
+        
+        console.log("CACHE MISS")
+        cityData = await axios.get(`http://api.weatherbit.io/v2.0/forecast/daily?key=77c4324de293441698c215757086494d&city=${request.query.searchQuery}`)
+        weathercache[request.query.searchQuery]= cityData 
+    }else{
+        console.log("CACHE HIT")
+    }
+    
 
 
     let forecastData = cityData.data.data.map(function (element) {
@@ -64,11 +74,23 @@ let headers = {
     Authorization: "Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiJmZjllMDBjZjU5YTc5NmY4NTdlMDA0OTAwMjNmOWZmNyIsInN1YiI6IjY0NGZkNDRmMTI0YzhkMDJlNzdlY2IyYyIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.3IHoODKbUEVAdXrPp7An5vCjfKBxdoGw6lnHLR5QP6Q"
 
 }
+let moviecache ={}
+
+
+
 app.get("/movies", async function (request, response) {
     let movie = request.query.movie
+    let movieResponse = moviecache [request.query.movie]
+    if (movieResponse === undefined)
+     {
+        console.log("CACHE MISS")
+        movieResponse = await axios.get(`https://api.themoviedb.org/3/search/movie?api_key=ff9e00cf59a796f857e00490023f9ff7&query=${movie}`, headers = headers)
+        moviecache[request.query.movie] = movieResponse
+    }else{
+        console.log("CACHE HIT")
+    }
     // send a requst moviedb api
     // URL: https://api.themoviedb.org/3/movie/550?api_key=ff9e00cf59a796f857e00490023f9ff7
-    let movieResponse = await axios.get(`https://api.themoviedb.org/3/search/movie?api_key=ff9e00cf59a796f857e00490023f9ff7&query=${movie}`, headers = headers)
     
     response.send(movieResponse.data.results)
 
